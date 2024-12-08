@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mic Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 50px;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <h1>Mic Test</h1>
+  <button id="recordButton">🎤 Start Recording</button>
+  <button id="playButton" disabled>▶️ Play Recording</button>
+
+  <script>
+    // Get buttons
+    const recordButton = document.getElementById('recordButton');
+    const playButton = document.getElementById('playButton');
+
+    let mediaRecorder; // For recording
+    let audioChunks = []; // To store recorded audio data
+
+    // When the record button is clicked
+    recordButton.addEventListener('click', async () => {
+      if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+        // Start recording
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        
+        mediaRecorder.ondataavailable = (event) => {
+          audioChunks.push(event.data); // Collect audio data
+        };
+
+        mediaRecorder.onstop = () => {
+          playButton.disabled = false; // Enable playback
+        };
+
+        audioChunks = []; // Reset chunks
+        mediaRecorder.start();
+        recordButton.textContent = "⏹️ Stop Recording";
+      } else {
+        // Stop recording
+        mediaRecorder.stop();
+        recordButton.textContent = "🎤 Start Recording";
+      }
+    });
+
+    // When the play button is clicked
+    playButton.addEventListener('click', () => {
+      const audioBlob = new Blob(audioChunks, { type: 'audio/mpeg' });
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      audio.play();
+    });
+  </script>
+</body>
+</html>
